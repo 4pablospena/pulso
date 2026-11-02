@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { recipeMacros } from '#shared/core/nutrition'
-import { RECIPES, type RecipeTag } from '#shared/data/recipes'
+import { allRecipes, type RecipeTag } from '#shared/data/recipes'
 import type { MealSlot } from '#shared/types'
 
 const props = defineProps<{
@@ -23,10 +23,15 @@ const search = ref('')
 const tag = ref<RecipeTag | ''>('')
 const TAGS: RecipeTag[] = ['Alta proteína', 'Rápida', 'Ligera', 'Vegetariana', 'Sin cocinar', 'Batch cooking']
 const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-const options = computed(() => RECIPES.filter((r) =>
+const { settings } = useSettings()
+const favs = computed(() => new Set(settings.value?.favorites ?? []))
+const onlyFavs = ref(false)
+const options = computed(() => allRecipes().filter((r) =>
+  (!onlyFavs.value || favs.value.has(r.id)) &&
   r.slots.includes(props.slot)
   && (!tag.value || r.tags.includes(tag.value))
-  && (!search.value || normalize(r.name).includes(normalize(search.value)))))
+  && (!search.value || normalize(r.name).includes(normalize(search.value))))
+  .sort((a, b) => Number(favs.value.has(b.id)) - Number(favs.value.has(a.id))))
 const look = computed(() => SLOT_STYLE[props.slot])
 </script>
 
@@ -59,18 +64,20 @@ const look = computed(() => SLOT_STYLE[props.slot])
         <input v-model="search" placeholder="Buscar receta" aria-label="Buscar receta">
       </div>
       <div class="chips">
-        <button class="chip" :class="{ on: !tag }" @click="tag = ''">Todas</button>
+        <button class="chip" :class="{ on: !tag && !onlyFavs }" @click="tag = ''; onlyFavs = false">Todas</button>
+        <button class="chip" :class="{ on: onlyFavs }" @click="onlyFavs = !onlyFavs"><AppIcon name="heart" :size="13" :filled="onlyFavs" /> Favoritas</button>
         <button v-for="t in TAGS" :key="t" class="chip" :class="{ on: tag === t }" @click="tag = tag === t ? '' : t">{{ t }}</button>
       </div>
 
       <div class="group">
         <div class="list icons">
           <button v-for="r in options" :key="r.id" class="list-row" @click="emit('choose', r.id, servings)">
-            <IconTile :name="look.icon" :color="look.color" />
+            <div class="thumb"><RecipeCover :recipe="r" :height="40" :radius="8" /></div>
             <span class="stack grow">
               <span>{{ r.name }}</span>
               <span class="footnote muted">{{ recipeMacros(r, factor).kcal }} kcal · {{ Math.round(recipeMacros(r, factor).protein) }} g proteína · {{ r.prepMin }} min</span>
             </span>
+            <AppIcon v-if="favs.has(r.id)" name="heart" :size="14" filled style="color: var(--pink)" />
             <AppIcon v-if="r.id === recipeId" name="check" :size="18" :weight="2.6" class="tint" />
           </button>
         </div>
@@ -95,4 +102,5 @@ const look = computed(() => SLOT_STYLE[props.slot])
 .search input::placeholder { color: var(--muted); }
 .chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
 .chip { flex: none; }
+.thumb { width: 40px; flex: none; }
 </style>

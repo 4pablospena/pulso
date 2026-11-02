@@ -4,6 +4,8 @@ import { ingredientById } from '#shared/data/foods'
 import { recipeById } from '#shared/data/recipes'
 
 const route = useRoute()
+const router = useRouter()
+const { settings, save } = useSettings()
 const recipe = recipeById(route.params.id as string)
 if (!recipe) throw createError({ statusCode: 404, statusMessage: 'Receta no encontrada' })
 
@@ -11,6 +13,20 @@ const { show } = useToast()
 /** Factor de ración: llega desde el plan (?x=1.15) o se elige aquí. */
 const factor = ref(Number(route.query.x) || 1)
 const macros = computed(() => recipeMacros(recipe, factor.value))
+
+const fav = computed(() => !!settings.value?.favorites.includes(recipe!.id))
+async function toggleFav() {
+  const list = new Set(settings.value?.favorites ?? [])
+  fav.value ? list.delete(recipe!.id) : list.add(recipe!.id)
+  await save({ favorites: [...list] })
+}
+
+async function remove() {
+  if (!confirm(`¿Borrar la receta «${recipe!.name}»?`)) return
+  await $fetch(`/api/recipes/custom/${recipe!.id}`, { method: 'DELETE' })
+  await refreshNuxtData('custom-recipes')
+  router.replace('/recetas')
+}
 
 async function toShopping() {
   const names = recipe!.ingredients.map(([id]) => ingredientById(id)).filter((i) => i && !i.pantry).map((i) => i!.name)
@@ -21,14 +37,17 @@ async function toShopping() {
 
 <template>
   <main v-if="recipe" class="page">
-    <header>
-      <a class="muted small" href="#" @click.prevent="$router.back()">‹ Volver</a>
-      <h1 class="title" style="font-size: 28px">{{ recipe.name }}</h1>
-      <div class="row wrap" style="gap: 6px; margin-top: 6px">
-        <span class="chip small">⏱ {{ recipe.prepMin }} min</span>
-        <span v-for="t in recipe.tags" :key="t" class="chip small muted">{{ t }}</span>
-      </div>
-    </header>
+    <PageHeader :title="recipe.name" :back="{ to: '/recetas', label: 'Recetas' }">
+      <button class="icon-btn" :style="{ color: fav ? 'var(--pink)' : undefined }" :aria-label="fav ? 'Quitar de favoritas' : 'Añadir a favoritas'" @click="toggleFav">
+        <AppIcon name="heart" :size="17" :filled="fav" :weight="2.2" />
+      </button>
+    </PageHeader>
+    <RecipeCover :recipe="recipe" :height="190" :radius="16" style="margin-top: -6px" />
+    <div class="row wrap" style="gap: 6px; margin-top: -8px">
+      <span class="chip small"><AppIcon name="clock" :size="13" /> {{ recipe.prepMin }} min</span>
+      <span v-for="t in recipe.tags" :key="t" class="chip small muted">{{ t }}</span>
+      <span v-if="recipe.author" class="chip small muted">De {{ recipe.author }}</span>
+    </div>
 
     <section class="card">
       <div class="macros">
@@ -61,6 +80,10 @@ async function toShopping() {
       <h2 class="card-title">Preparación</h2>
       <ol class="steps"><li v-for="s in recipe.steps" :key="s">{{ s }}</li></ol>
     </section>
+    <div v-if="recipe.custom" class="row" style="gap: 8px">
+      <NuxtLink :to="`/recetas/nueva?edit=${recipe.id}`" class="btn ghost grow">Editar</NuxtLink>
+      <button class="btn ghost grow" style="--accent: var(--red)" @click="remove">Borrar</button>
+    </div>
   </main>
 </template>
 

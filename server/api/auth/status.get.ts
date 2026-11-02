@@ -7,5 +7,6 @@ export default defineEventHandler(async (event): Promise<AuthStatus> => {
     authenticated: !authRequired() || !!user,
     setup: authRequired() && !(await users.all()).length,
     user: user ? publicUser(user) : null,
+    needsOnboarding: (!authRequired() || !!user) ? !(await db.settings.get()).onboarded : false,
   }
 })

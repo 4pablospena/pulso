@@ -6,8 +6,28 @@ const props = defineProps<{ slot: MealSlot; date?: string }>()
 const emit = defineEmits<{ close: [] }>()
 const { show } = useToast()
 
-type Mode = 'photo' | 'barcode' | 'quick'
-const mode = ref<Mode>('photo')
+type Mode = 'search' | 'photo' | 'barcode' | 'quick'
+const mode = ref<Mode>('search')
+
+// Búsqueda por nombre (básicos de la app + Open Food Facts)
+const query = ref('')
+const results = ref<(FoodCandidate & { origin: string })[]>([])
+const searching = ref(false)
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch(query, (q) => {
+  clearTimeout(searchTimer)
+  if (q.trim().length < 2) { results.value = []; return }
+  searchTimer = setTimeout(async () => {
+    searching.value = true
+    try { results.value = await $fetch('/api/food/search', { query: { q } }) } catch { results.value = [] }
+    searching.value = false
+  }, 350)
+})
+function pick(food: FoodCandidate) {
+  candidates.value.push({ name: food.name, grams: food.grams, macros: { ...food.macros } })
+  source.value = 'manual'
+  show(`${food.name} añadido`)
+}
 const candidates = ref<FoodCandidate[]>([])
 const source = ref<FoodEntry['source']>('manual')
 const busy = ref(false)
@@ -122,21 +142,41 @@ const QUICK: FoodCandidate[] = [
   <div class="sheet-backdrop" @click.self="emit('close')">
     <div class="sheet">
       <div class="sheet-handle" />
-      <div class="row between">
-        <button class="muted" @click="emit('close')">Cerrar</button>
+      <div class="sheet-bar">
+        <button @click="emit('close')">Cancelar</button>
         <strong>Añadir a {{ slot }}</strong>
-        <button style="color: var(--exercise); font-weight: 700" :disabled="!candidates.length" @click="save">
+        <button :disabled="!candidates.length" @click="save">
           Guardar<template v-if="candidates.length"> ({{ candidates.length }})</template>
         </button>
       </div>
 
       <div class="segmented">
+        <button :class="{ on: mode === 'search' }" @click="mode = 'search'">Buscar</button>
         <button :class="{ on: mode === 'photo' }" @click="mode = 'photo'">Foto</button>
         <button :class="{ on: mode === 'barcode' }" @click="mode = 'barcode'">Código</button>
         <button :class="{ on: mode === 'quick' }" @click="mode = 'quick'">Rápido</button>
       </div>
 
-      <section v-if="mode === 'photo'" class="card">
+      <section v-if="mode === 'search'" class="section">
+        <div class="search-box">
+          <AppIcon name="search" :size="16" class="muted" />
+          <input v-model="query" placeholder="Pechuga, yogur griego, Hacendado…" aria-label="Buscar alimento" autofocus>
+        </div>
+        <div v-if="results.length" class="group">
+          <div class="list">
+            <button v-for="(f, i) in results" :key="i" class="list-row" @click="pick(f)">
+              <span class="stack grow">
+                <span class="ellipsis">{{ f.name }}</span>
+                <span class="footnote muted">{{ f.grams }} g · {{ Math.round(f.macros.kcal) }} kcal · P {{ Math.round(f.macros.protein) }} g · {{ f.origin }}</span>
+              </span>
+              <AppIcon name="plus" :size="18" :weight="2.4" class="tint" />
+            </button>
+          </div>
+        </div>
+        <p v-else class="section-footer">{{ searching ? 'Buscando…' : query.trim().length >= 2 ? 'Sin resultados.' : 'Busca entre los básicos de la app y miles de productos de Open Food Facts.' }}</p>
+      </section>
+
+      <section v-else-if="mode === 'photo'" class="card">
         <label class="btn" style="--accent: var(--exercise)">
           <AppIcon name="camera" /> Hacer o elegir foto del plato
           <input type="file" accept="image/*" capture="environment" hidden @change="onPhoto">
@@ -193,5 +233,7 @@ const QUICK: FoodCandidate[] = [
 </template>
 
 <style scoped>
+.search-box { display: flex; align-items: center; gap: 6px; background: var(--fill); border-radius: 10px; padding: 0 10px; height: 36px; }
+.search-box input { flex: 1; background: none; border: 0; outline: none; font-size: 17px; }
 .preview { width: 100%; max-height: 260px; object-fit: cover; border-radius: 14px; background: #000; }
 </style>

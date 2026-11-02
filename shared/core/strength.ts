@@ -29,3 +29,21 @@ export function nextTarget(last: LoggedSet, range: [number, number] = [6, 12], i
   if (last.reps >= range[1]) return { reps: range[0], weightKg: last.weightKg + increment }
   return { reps: last.reps + 1, weightKg: last.weightKg }
 }
+
+export const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25]
+
+/**
+ * Discos por lado para llegar a `target` kg con una barra de `bar` kg.
+ * `rest` es lo que no se puede cargar exactamente con los discos disponibles.
+ */
+export function platesPerSide(target: number, bar = 20, plates = PLATES): { plates: number[]; rest: number } {
+  let perSide = Math.max(0, (target - bar) / 2)
+  const out: number[] = []
+  for (const p of plates) {
+    while (perSide + 1e-9 >= p) {
+      out.push(p)
+      perSide -= p
+    }
+  }
+  return { plates: out, rest: Math.round(perSide * 2 * 100) / 100 }
+}

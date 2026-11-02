@@ -5,6 +5,8 @@ export interface RoutineItem {
   sets: number
   reps: [number, number]
   restSec: number
+  /** Se hace en superserie con el siguiente ejercicio (sin descanso entre ambos). */
+  superset?: boolean
 }
 
 export interface Routine {
@@ -77,4 +79,18 @@ export function dayTitle(day: DayPlan | undefined, routines: Routine[]): string 
     case 'mobility': return 'Descanso activo · Movilidad'
     default: return 'Descanso'
   }
+}
+
+/** Semana de partida según los días de fuerza, si entrena en casa y si corre. */
+export function scheduleFor(strengthDays: number, opts: { home: boolean; runs: boolean }): TrainingSchedule {
+  const r = (id: string): DayPlan => ({ kind: 'strength', routineId: opts.home ? 'casa' : id })
+  const run: DayPlan = opts.runs ? { kind: 'run' } : { kind: 'mobility' }
+  const rest: DayPlan = { kind: 'rest' }
+  const layouts: Record<number, TrainingSchedule> = {
+    2: { 1: r('full-body'), 2: rest, 3: run, 4: r('full-body'), 5: rest, 6: run, 0: rest },
+    3: { 1: r('torso'), 2: run, 3: r('pierna'), 4: rest, 5: r('full-body'), 6: run, 0: rest },
+    4: { 1: r('torso'), 2: r('pierna'), 3: run, 4: r('torso'), 5: r('pierna'), 6: run, 0: rest },
+    5: { 1: r('torso'), 2: r('pierna'), 3: run, 4: r('full-body'), 5: r('torso'), 6: r('pierna'), 0: rest },
+  }
+  return layouts[Math.min(5, Math.max(2, strengthDays))]!
 }

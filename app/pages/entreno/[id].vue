@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { duration } from '#shared/core/format'
 import { exerciseHistory, isRecord, personalRecords } from '#shared/core/progress'
-import { bestOneRepMax, volume } from '#shared/core/strength'
+import { bestOneRepMax, platesPerSide, volume } from '#shared/core/strength'
 import { exerciseById, type Exercise } from '#shared/data/exercises'
 import type { SessionExercise, StrengthSession } from '#shared/types'
 
@@ -48,7 +48,14 @@ function toggle(ei: number, si: number) {
   const set = ex.sets[si]!
   set.done = !set.done
   if (!set.done) return
+  // En superserie no se descansa: se pasa directamente al siguiente ejercicio.
+  if (ex.superset && session.value!.exercises[ei + 1]) {
+    show(`Superserie: ahora ${session.value!.exercises[ei + 1]!.name}`)
+    return
+  }
   restEnds.value = Date.now() + ex.restSec * 1000
+  // Aviso push al terminar el descanso, por si apagas la pantalla.
+  $fetch('/api/push/rest', { method: 'POST', body: { at: restEnds.value, sessionId: id } }).catch(() => {})
   const records = previous.value.get(ex.exerciseId)?.records
   if (!ex.timed && records && set.weightKg > 0 && isRecord(set, records)) show(`Nuevo récord en ${ex.name}`)
 }
@@ -86,6 +93,18 @@ async function discard() {
 }
 
 const RPES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+
+// Calculadora de discos
+const plateFor = ref<SessionExercise | null>(null)
+const plateTarget = ref(60)
+const bar = ref(20)
+function openPlates(ex: SessionExercise) {
+  plateFor.value = ex
+  plateTarget.value = ex.sets.find((s) => !s.done)?.weightKg || ex.sets.at(-1)?.weightKg || 60
+}
+const loadout = computed(() => platesPerSide(plateTarget.value, bar.value))
+const PLATE_COLOR: Record<number, string> = { 25: 'var(--red)', 20: 'var(--blue)', 15: 'var(--yellow)', 10: 'var(--green)', 5: '#e5e5ea', 2.5: '#8e8e93', 1.25: '#636366' }
+const usesBarbell = (ex: SessionExercise) => ['Barra', 'Barra EZ'].includes(exerciseById(ex.exerciseId)?.equipment ?? '')
 </script>
 
 <template>
@@ -107,7 +126,9 @@ const RPES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10]
       </div>
     </section>
 
-    <section v-for="(ex, ei) in session.exercises" :key="ex.exerciseId" class="card">
+    <section v-for="(ex, ei) in session.exercises" :key="ex.exerciseId" class="card"
+             :class="{ 'ss-top': ex.superset && session.exercises[ei + 1], 'ss-bottom': ei > 0 && session.exercises[ei - 1]?.superset }">
+      <span v-if="ex.superset && session.exercises[ei + 1]" class="ss-badge">Superserie</span>
       <div class="row">
         <ExerciseThumb :img="exerciseById(ex.exerciseId)?.img ?? ''" :size="48" />
         <NuxtLink :to="`/ejercicios/${ex.exerciseId}`" class="grow">
@@ -134,9 +155,13 @@ const RPES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10]
           </button>
         </div>
       </div>
-      <div v-if="!finished" class="row between">
-        <button class="row" style="color: var(--strength); font-weight: 600" @click="addSet(ei)"><AppIcon name="plus" /> Serie</button>
-        <button class="muted small" @click="session.exercises.splice(ei, 1)">Quitar ejercicio</button>
+      <div v-if="!finished" class="row between wrap">
+        <button class="row tint footnote" style="gap: 4px" @click="addSet(ei)"><AppIcon name="plus" :size="16" :weight="2.4" /> Serie</button>
+        <button v-if="usesBarbell(ex)" class="footnote tint" @click="openPlates(ex)">Discos</button>
+        <button v-if="session.exercises[ei + 1]" class="footnote" :class="ex.superset ? 'tint' : 'muted'" @click="ex.superset = !ex.superset">
+          {{ ex.superset ? 'Quitar superserie' : 'Superserie con el siguiente' }}
+        </button>
+        <button class="muted footnote" @click="session.exercises.splice(ei, 1)">Quitar</button>
       </div>
     </section>
 
@@ -144,8 +169,39 @@ const RPES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 
     <div v-if="restEnds" class="rest">
       <AppIcon name="timer" /> <span class="grow">Descanso {{ duration(restLeft) }}</span>
-      <button class="chip" @click="restEnds += 30_000">+30 s</button>
-      <button class="chip" @click="restEnds = null">Saltar</button>
+      <button class="chip" @click="restEnds += 30_000; $fetch('/api/push/rest', { method: 'POST', body: { at: restEnds, sessionId: id } }).catch(() => {})">+30 s</button>
+      <button class="chip" @click="restEnds = null; $fetch('/api/push/rest', { method: 'POST', body: { at: null } }).catch(() => {})">Saltar</button>
+    </div>
+
+    <div v-if="plateFor" class="sheet-backdrop" @click.self="plateFor = null">
+      <div class="sheet" role="dialog" aria-label="Calculadora de discos">
+        <div class="sheet-handle" />
+        <div class="sheet-bar"><span /><strong>Discos · {{ plateFor.name }}</strong><button @click="plateFor = null">OK</button></div>
+        <div class="group">
+          <div class="list">
+            <label class="list-row">
+              <span class="grow">Peso total</span>
+              <input v-model.number="plateTarget" type="number" inputmode="decimal" step="2.5" class="plate-input">
+              <span class="muted">kg</span>
+            </label>
+            <div class="list-row">
+              <span class="grow">Barra</span>
+              <div class="segmented" style="width: 170px">
+                <button v-for="b in [20, 15, 10]" :key="b" :class="{ on: bar === b }" @click="bar = b">{{ b }} kg</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card bar-visual">
+          <span class="footnote muted">Por cada lado</span>
+          <div class="plates">
+            <span class="sleeve" />
+            <span v-for="(p, i) in loadout.plates" :key="i" class="plate" :style="{ background: PLATE_COLOR[p], height: `${30 + p * 2.4}px` }">{{ p }}</span>
+            <span v-if="!loadout.plates.length" class="footnote muted">Solo la barra</span>
+          </div>
+          <span v-if="loadout.rest" class="footnote" style="color: var(--orange)">Faltan {{ loadout.rest }} kg que no se pueden cargar con discos estándar.</span>
+        </div>
+      </div>
     </div>
 
     <ExercisePicker v-if="picking" :selected="session.exercises.map((e) => e.exerciseId)" @pick="addExercise" @close="picking = false" />
@@ -154,6 +210,14 @@ const RPES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 </template>
 
 <style scoped>
+.ss-top { border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; box-shadow: inset 3px 0 0 var(--tint); margin-bottom: -16px; }
+.ss-bottom { border-top-left-radius: 4px; border-top-right-radius: 4px; box-shadow: inset 3px 0 0 var(--tint); }
+.ss-badge { align-self: flex-start; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--tint); letter-spacing: 0.3px; }
+.plate-input { width: 80px; text-align: right; background: none; border: 0; outline: none; font-size: 17px; color: var(--text); }
+.bar-visual { gap: 10px; }
+.plates { display: flex; align-items: center; gap: 3px; min-height: 96px; }
+.sleeve { width: 48px; height: 10px; border-radius: 3px; background: #aeaeb2; }
+.plate { width: 22px; border-radius: 4px; display: grid; place-items: center; writing-mode: vertical-rl; font-size: 11px; font-weight: 700; color: #000; }
 .set-head, .set-row { display: grid; grid-template-columns: 24px 1fr 1fr 1fr 32px; align-items: center; gap: 8px; padding: 8px 0; }
 .set-row .num { width: 100%; }
 .set-row.done { opacity: 0.7; }

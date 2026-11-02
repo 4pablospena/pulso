@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { bmr, GOAL_LABEL, type Goal } from '#shared/core/energy'
 import { FASTING_PROTOCOLS } from '#shared/core/fasting'
-import type { AppUser, IntegrationStatus, Settings } from '#shared/types'
+import type { AppUser, IntegrationStatus, NotificationPrefs, Settings } from '#shared/types'
 
 const { settings, save } = useSettings()
 const { data: integrations, refresh } = useFetch<IntegrationStatus>('/api/integrations', { key: 'integrations' })
@@ -61,6 +61,9 @@ async function changePassword() {
 
 async function logout() {
   await $fetch('/api/auth/logout', { method: 'POST' })
+  // Borra los datos que el modo sin conexión guardó de esta cuenta.
+  navigator.serviceWorker?.controller?.postMessage('clear-data')
+  localStorage.removeItem('pulso-offline-queue')
   window.location.href = '/login'
 }
 
@@ -68,6 +71,32 @@ async function copyToken() {
   if (!me.value?.healthToken) return
   await navigator.clipboard.writeText(me.value.healthToken)
   show('Token copiado')
+}
+
+// Notificaciones
+const push = usePush()
+const { data: pushStatus } = useFetch<{ configured: boolean; scheduling: boolean; devices: number }>('/api/push/status', { key: 'push-status' })
+const NOTIFY: { key: keyof NotificationPrefs; label: string; hint: string; scheduled?: boolean }[] = [
+  { key: 'shopping', label: 'Lista de la compra', hint: 'Cuando otra persona añade productos o recalcula la lista.' },
+  { key: 'fasting', label: 'Ayuno', hint: 'Al terminar el ayuno y al cerrarse la ventana de ingesta.', scheduled: true },
+  { key: 'meals', label: 'Comidas', hint: 'Recordatorio de cada comida planificada si aún no la has registrado.', scheduled: true },
+  { key: 'water', label: 'Agua', hint: 'Si vas por detrás de tu objetivo (11, 13, 17 y 19 h).', scheduled: true },
+  { key: 'rest', label: 'Descanso entre series', hint: 'Al acabar el descanso, aunque la pantalla esté apagada.', scheduled: true },
+]
+async function togglePush() {
+  try {
+    if (push.subscribed.value) await push.disable()
+    else {
+      await push.enable()
+      await $fetch('/api/push/test', { method: 'POST' })
+    }
+    await refreshNuxtData('push-status')
+  } catch (e: any) {
+    show(e?.message ?? 'No se pudieron activar')
+  }
+}
+async function setNotify(key: keyof NotificationPrefs, value: boolean) {
+  await save({ notifications: { ...settings.value!.notifications, [key]: value } })
 }
 
 async function persist() {
@@ -110,6 +139,34 @@ const lastSync = computed(() => integrations.value?.health.lastSync
           <button class="list-row" style="color: var(--red)" @click="logout">Cerrar sesión</button>
         </div>
       </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-header">Notificaciones</h2>
+      <div class="group">
+        <div class="list">
+          <div class="list-row">
+            <IconTile name="bolt" color="var(--red)" />
+            <span class="stack grow">
+              <span>Notificaciones en este dispositivo</span>
+              <span class="footnote muted">{{ push.subscribed.value ? 'Activadas' : !push.supported.value ? 'No disponibles en este navegador' : 'Desactivadas' }}</span>
+            </span>
+            <input type="checkbox" class="switch" :checked="push.subscribed.value" :disabled="!push.supported.value || !pushStatus?.configured" @change="togglePush">
+          </div>
+          <label v-for="n in NOTIFY" :key="n.key" class="list-row">
+            <span class="stack grow">
+              <span>{{ n.label }}</span>
+              <span class="footnote muted">{{ n.hint }}</span>
+            </span>
+            <input type="checkbox" class="switch" :checked="settings?.notifications[n.key]" @change="setNotify(n.key, ($event.target as HTMLInputElement).checked)">
+          </label>
+        </div>
+      </div>
+      <p class="section-footer">
+        <template v-if="!push.standalone.value">En el iPhone, las notificaciones solo funcionan con Pulso añadida a la pantalla de inicio (Compartir → Añadir a pantalla de inicio). </template>
+        <template v-if="pushStatus && !pushStatus.configured">Falta configurar las claves VAPID en el servidor. </template>
+        <template v-else-if="pushStatus && !pushStatus.scheduling">Los avisos de ayuno, comidas, agua y descanso necesitan QStash en el servidor. </template>
+      </p>
     </section>
 
     <section v-if="isAdmin" class="section">

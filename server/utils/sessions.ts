@@ -20,6 +20,7 @@ export function plannedExercise(ex: Exercise, history: StrengthSession[], item?:
     restSec: item?.restSec ?? ex.restSec,
     reps,
     timed: ex.timed,
+    ...(item?.superset ? { superset: true } : {}),
     sets: Array.from({ length: item?.sets ?? 3 }, () => ({ ...target, rpe: null, done: false })),
   }
 }

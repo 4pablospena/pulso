@@ -1,6 +1,7 @@
 import { dayKey } from '#shared/core/format'
 import { shoppingFromMeals } from '#shared/core/nutrition'
 import { mealMultiplier } from '#shared/core/planner'
+import { ingredientById } from '#shared/data/foods'
 import type { ShoppingItem, ShoppingMeta } from '#shared/types'
 
 /**
@@ -26,17 +27,32 @@ export default defineEventHandler(async (event) => {
   const me = currentUser(event)
   const mine = (i: ShoppingItem) => !me || !i.ownerId || i.ownerId === me.id
   const kept = current.filter((i) => i.checked || !mine(i) || (i.source !== 'plan' && !covered(i.name)))
-  const fresh: ShoppingItem[] = lines.map((l) => ({
+  // Lo que ya hay en la despensa se resta: solo se compra lo que falta.
+  const pantry = await db.pantry.get()
+  const fresh: ShoppingItem[] = lines.map((l) => {
+    const stock = pantry[l.ingredientId] ?? 0
+    const missing = l.neededGrams - stock
+    const pack = ingredientById(l.ingredientId)?.product.packGrams ?? 1
+    const coveredByPantry = stock > 0 && missing <= 0
+    return {
     id: newId(), name: l.name, aisle: l.aisle, checked: false, addedAt: Date.now(), source: 'plan',
     ...(me ? { ownerId: me.id, ownerName: me.name } : {}),
-    ingredientId: l.ingredientId, product: l.product, format: l.format, units: l.units,
+    ingredientId: l.ingredientId, product: l.product, format: l.format,
+    units: stock > 0 && missing > 0 ? Math.max(1, Math.ceil(missing / pack - 0.05)) : l.units,
     neededGrams: l.neededGrams, recipes: l.recipes, pantry: l.pantry,
+    ...(stock > 0 ? { inPantryGrams: Math.round(stock) } : {}),
     // Lo básico de despensa se da por hecho que lo tienes, salvo que lo desmarcaras.
-    have: hadAtHome.has(l.ingredientId) || (l.pantry && !current.some((i) => i.ingredientId === l.ingredientId && i.have === false)),
-  }))
+    have: coveredByPantry || hadAtHome.has(l.ingredientId) || (l.pantry && !current.some((i) => i.ingredientId === l.ingredientId && i.have === false)),
+    }
+  })
   const list = [...kept, ...fresh]
   await db.shopping.save(list)
   await db.kv.write<ShoppingMeta>('shopping-meta', { from, days, generatedAt: Date.now() })
+  if (me) {
+    await pushToHousehold(event, 'shopping', {
+      title: 'Lista de la compra actualizada', body: `${me.name} ha calculado la compra de ${days} días (${fresh.length} productos).`, url: '/compra', tag: 'shopping',
+    }).catch(() => {})
+  }
   return list
 })
 

@@ -27,14 +27,20 @@ const SCHEMA = {
 
 let client: Anthropic | null = null
 
+/** Cliente de la API de Claude (cámara inteligente y planificación con IA). */
+export function anthropic(): Anthropic {
+  if (!visionConfigured()) throw createError({ statusCode: 400, message: 'Falta NUXT_ANTHROPIC_API_KEY para usar la IA.' })
+  client ??= new Anthropic({ apiKey: useRuntimeConfig().anthropicApiKey })
+  return client
+}
+
 export function visionConfigured() {
   return !!useRuntimeConfig().anthropicApiKey
 }
 
 /** Cámara inteligente: identifica los alimentos del plato y estima ración y macros. */
 export async function analyzeMeal(base64: string, mediaType: 'image/jpeg' | 'image/png' | 'image/webp'): Promise<FoodCandidate[]> {
-  if (!visionConfigured()) throw createError({ statusCode: 400, message: 'Falta NUXT_ANTHROPIC_API_KEY para la cámara inteligente.' })
-  client ??= new Anthropic({ apiKey: useRuntimeConfig().anthropicApiKey })
+  const client = anthropic()
 
   const response = await client.beta.messages.create({
     model: 'claude-opus-5-5',

@@ -75,6 +75,20 @@ const rows: Row[] = [
   ['aguacate', 'Aguacate', 160, 2, 8.5, 14.7, 'Fruta y verdura', 'Aguacates', 500, 'Malla ~3 uds'],
   ['tomate-triturado', 'Tomate triturado', 30, 1.3, 4.5, 0.2, 'Conservas', 'Tomate triturado', 400, 'Bote ~400 g'],
 
+  // Ampliación del recetario
+  ['sardinas', 'Sardinas en aceite de oliva', 210, 24, 0, 12, 'Conservas', 'Sardinas en aceite de oliva', 85, 'Lata ~85 g escurrido'],
+  ['mejillones', 'Mejillones al natural', 95, 16, 3, 2, 'Conservas', 'Mejillones al natural', 70, 'Lata ~70 g escurrido'],
+  ['requeson', 'Requesón', 98, 11, 3.5, 4.3, 'Lácteos y huevos', 'Requesón', 500, 'Tarrina ~500 g'],
+  ['feta', 'Queso feta', 264, 14, 4, 21, 'Charcutería y quesos', 'Queso feta', 200, 'Bloque ~200 g'],
+  ['edamame', 'Edamame', 121, 12, 9, 5, 'Congelados', 'Edamame congelado', 400, 'Bolsa ~400 g'],
+  ['cuscus', 'Cuscús (crudo)', 360, 13, 72, 1.5, 'Despensa', 'Cuscús', 500, 'Paquete ~500 g'],
+  ['gazpacho', 'Gazpacho', 40, 0.7, 3.6, 2.5, 'Bebidas', 'Gazpacho', 1000, 'Brik 1 L'],
+  ['kiwi', 'Kiwi', 61, 1.1, 15, 0.5, 'Fruta y verdura', 'Kiwis', 600, '~8 uds', { unitGrams: 75, unitName: ['kiwi', 'kiwis'] }],
+  ['naranja', 'Naranja', 47, 0.9, 12, 0.1, 'Fruta y verdura', 'Naranjas de mesa', 2000, 'Malla ~2 kg', { unitGrams: 200, unitName: ['naranja', 'naranjas'] }],
+  ['calabaza', 'Calabaza', 26, 1, 6.5, 0.1, 'Fruta y verdura', 'Calabaza troceada', 500, 'Bandeja ~500 g'],
+  ['setas', 'Setas', 30, 3, 4, 0.4, 'Fruta y verdura', 'Setas variadas', 250, 'Bandeja ~250 g'],
+  ['pavo-picado', 'Carne picada de pavo', 120, 21, 0, 4, 'Carne', 'Picada de pavo', 400, 'Bandeja ~400 g'],
+
   // Grasas y despensa
   ['aove', 'Aceite de oliva virgen extra', 884, 0, 0, 100, 'Despensa', 'Aceite de oliva virgen extra', 1000, 'Botella 1 L', { pantry: true }],
   ['crema-cacahuete', 'Crema de cacahuete 100%', 600, 25, 15, 48, 'Frutos secos', 'Crema de cacahuete 100% cacahuete', 350, 'Bote ~350 g'],

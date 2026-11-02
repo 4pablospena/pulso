@@ -134,7 +134,7 @@ const balance = computed(() => Math.round((day.value?.eaten.kcal ?? 0) - burned.
           </div>
         </NuxtLink>
         <div class="actions">
-          <button v-if="!eaten(slot, plannedFor(slot)!.recipe.id)" class="chip" style="background: var(--exercise); color: #000" @click="logPlanned(slot)">Comido</button>
+          <button v-if="!eaten(slot, plannedFor(slot)!.recipe.id)" class="chip" style="background: var(--tint); color: var(--on-tint)" @click="logPlanned(slot)">Comido</button>
           <span v-else class="chip" style="color: var(--exercise)"><AppIcon name="check" :size="13" :weight="3" /> Hecho</span>
           <button class="chip small" @click="swapping = slot">Cambiar</button>
         </div>

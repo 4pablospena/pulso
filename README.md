@@ -22,6 +22,8 @@ Se instala en el iPhone como app («Compartir → Añadir a pantalla de inicio»
 | Resumen | Anillos Ingesta / Proteína / Actividad, entreno del día, siguiente comida del plan, ayuno, agua | Fitness |
 | Nutrición | 4 planes nutricionales (mediterránea proteica, definición 16:8, vegetariana, batch cooking) con 34 recetas; raciones ajustadas a tu objetivo, «✓ Comido» en un toque, cambiar comidas; foto (Claude), código de barras y ayuno | YAZIO |
 | Balance | Historial de 7/30 días: comidas frente a quemadas por día, déficit o superávit, medias, días en objetivo, cumplimiento del plan y evolución del peso (manual o desde Salud) frente a lo que predice el balance. Nutrición permite navegar a días pasados y registrar en ellos | YAZIO |
+| Bienvenida | Asistente de 4 pasos para cuentas nuevas: datos, objetivo, plan nutricional y semana de entreno | — |
+| Sin conexión y avisos | Funciona sin cobertura (la compra se sincroniza al volver la red) y notificaciones push: compra, ayuno, comidas, agua y descanso | — |
 | Entreno · Plan | Base de 71 ejercicios en español con fotos y técnica, rutinas editables, semana configurable, sobrecarga progresiva sugerida | Hevy |
 | Entreno · Progreso | Racha semanal, sesiones por semana, series por grupo, récords (1RM, peso, reps, volumen) y ficha de progreso por ejercicio | Hevy |
 | Entreno · Running | Carreras de Strava (ritmo, desnivel, FC, zona) o de Apple Salud | Strava |
@@ -51,6 +53,8 @@ npm run dev            # http://localhost:3000
 - **Cámara inteligente**: `NUXT_ANTHROPIC_API_KEY`.
 
 Tests del núcleo: `npm test` · Tipos: `npm run typecheck`
+
+Notificaciones push en producción: ejecuta una vez `./scripts/setup-push.sh` (claves VAPID y QStash en Vercel).
 
 ## Estructura
 

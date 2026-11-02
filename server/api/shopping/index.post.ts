@@ -13,5 +13,12 @@ export default defineEventHandler(async (event) => {
     list.push({ id: newId(), name, aisle: categorize(name), checked: false, addedAt: Date.now(), source: 'manual', ...(me ? { ownerId: me.id, ownerName: me.name } : {}) })
   }
   await db.shopping.save(list)
+  const me = currentUser(event)
+  const added = names.map((n) => n.trim()).filter(Boolean)
+  if (me && added.length) {
+    await pushToHousehold(event, 'shopping', {
+      title: `${me.name} ha añadido a la compra`, body: added.join(', '), url: '/compra', tag: 'shopping',
+    }).catch(() => {})
+  }
   return list
 })

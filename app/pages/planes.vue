@@ -45,7 +45,7 @@ const recommended = computed(() => settings.value?.profile.goal)
             <span class="chip small muted">{{ p.slots.length }} comidas</span>
           </div>
         </div>
-        <span v-if="active?.id === p.id" class="chip small" style="background: var(--exercise); color: #000">Activo</span>
+        <span v-if="active?.id === p.id" class="chip small" style="background: var(--tint); color: var(--on-tint)">Activo</span>
       </div>
       <p class="muted" style="margin: 0">{{ p.description }}</p>
       <ul class="highlights"><li v-for="h in p.highlights" :key="h">{{ h }}</li></ul>

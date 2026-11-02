@@ -5,6 +5,11 @@ export type RecipeTag = 'Alta proteína' | 'Vegetariana' | 'Rápida' | 'Batch co
 export interface Recipe {
   id: string
   name: string
+  /** Receta creada por alguien de la casa. */
+  custom?: boolean
+  author?: string
+  /** Tiene foto subida (se sirve en /api/recipes/photo/<id>). */
+  photo?: boolean
   slots: MealSlot[]
   prepMin: number
   tags: RecipeTag[]
@@ -130,11 +135,102 @@ export const RECIPES: Recipe[] = [
   { id: 'wrap-pavo', name: 'Wrap de pavo y mozzarella', slots: X, prepMin: 5, tags: ['Alta proteína', 'Rápida'],
     ingredients: [['wrap', 60], ['jamon-pavo', 80], ['mozzarella', 50], ['lechuga', 40], ['tomate', 60]],
     steps: ['Rellena la tortilla, enróllala y dórala 1 min en la sartén.'] },
+
+  // Ampliación: desayunos
+  { id: 'tostada-requeson-fruta', name: 'Tostada de requesón con kiwi y miel', slots: D, prepMin: 5, tags: ['Rápida', 'Vegetariana', 'Sin cocinar'],
+    ingredients: [['pan-integral', 70], ['requeson', 120], ['kiwi', 150], ['miel', 8]],
+    steps: ['Tuesta el pan.', 'Unta el requesón y añade el kiwi en rodajas y un hilo de miel.'] },
+  { id: 'overnight-oats', name: 'Avena nocturna con yogur y frutos rojos', slots: D, prepMin: 5, tags: ['Batch cooking', 'Vegetariana', 'Sin cocinar'],
+    ingredients: [['avena', 60], ['yogur', 200], ['leche', 100], ['frutos-rojos', 100], ['chia', 10]],
+    steps: ['Mezcla avena, yogur, leche y chía en un tarro.', 'Deja en la nevera toda la noche y añade los frutos rojos por la mañana.'] },
+  { id: 'revuelto-setas', name: 'Revuelto de setas con pan integral', slots: D, prepMin: 10, tags: ['Vegetariana', 'Rápida'],
+    ingredients: [['huevo', 120], ['claras', 100], ['setas', 120], ['pan-integral', 60], ['aove', 5]],
+    steps: ['Saltea las setas con un poco de aceite.', 'Añade huevos y claras y remueve a fuego suave.', 'Sirve con el pan tostado.'] },
+  { id: 'batido-verde', name: 'Batido de plátano, espinacas y queso batido', slots: DM, prepMin: 3, tags: ['Alta proteína', 'Rápida', 'Vegetariana'],
+    ingredients: [['queso-batido', 200], ['platano', 120], ['espinacas', 40], ['bebida-avena', 200], ['crema-cacahuete', 10]],
+    steps: ['Tritura todo con hielo hasta que quede fino.'] },
+  { id: 'tostada-sardinas', name: 'Tostadas de sardinas y tomate', slots: D, prepMin: 5, tags: ['Alta proteína', 'Rápida'],
+    ingredients: [['pan-integral', 70], ['sardinas', 85], ['tomate', 80], ['aove', 5]],
+    steps: ['Ralla el tomate sobre el pan tostado.', 'Pon las sardinas encima con un hilo de aceite.'] },
+
+  // Ampliación: comidas
+  { id: 'cuscus-pollo', name: 'Cuscús con pollo, calabacín y pimiento', slots: C, prepMin: 20, tags: ['Alta proteína', 'Batch cooking'],
+    ingredients: [['cuscus', 70], ['pollo', 160], ['calabacin', 150], ['pimiento', 80], ['aove', 10], ['especias', 2]],
+    steps: ['Hidrata el cuscús con agua caliente 5 min.', 'Saltea el pollo con comino y las verduras en dados.', 'Mézclalo todo.'] },
+  { id: 'albondigas-pavo', name: 'Albóndigas de pavo en salsa de tomate con arroz', slots: CX, prepMin: 30, tags: ['Alta proteína', 'Batch cooking'],
+    ingredients: [['pavo-picado', 160], ['tomate-triturado', 150], ['cebolla', 50], ['arroz-basmati', 60], ['aove', 8], ['especias', 2]],
+    steps: ['Forma albóndigas con la carne y las especias.', 'Dóralas, añade cebolla y tomate y cuece 15 min.', 'Sirve con el arroz.'] },
+  { id: 'ensalada-cuscus-feta', name: 'Ensalada de cuscús, garbanzos y feta', slots: C, prepMin: 15, tags: ['Vegetariana', 'Batch cooking'],
+    ingredients: [['cuscus', 60], ['garbanzos', 150], ['feta', 40], ['tomate', 120], ['pepino', 100], ['aove', 10]],
+    steps: ['Hidrata el cuscús.', 'Mézclalo con garbanzos, verduras picadas y el feta desmenuzado.', 'Aliña con aceite y limón.'] },
+  { id: 'poke-salmon', name: 'Poke de salmón con edamame y arroz', slots: C, prepMin: 15, tags: ['Alta proteína'],
+    ingredients: [['arroz-vaso', 125], ['salmon', 120], ['edamame', 80], ['aguacate', 50], ['pepino', 80], ['zanahoria', 50]],
+    steps: ['Calienta el arroz y cuece el edamame 3 min.', 'Corta el salmón en dados (o hazlo a la plancha).', 'Monta el bol con todo.'] },
+  { id: 'lentejas-calabaza', name: 'Lentejas con calabaza y espinacas', slots: C, prepMin: 25, tags: ['Vegetariana', 'Batch cooking'],
+    ingredients: [['lentejas', 250], ['calabaza', 150], ['espinacas', 60], ['cebolla', 50], ['aove', 10], ['especias', 2]],
+    steps: ['Sofríe la cebolla y añade la calabaza en dados 10 min.', 'Incorpora las lentejas, las espinacas y comino. Cuece 8 min.'] },
+  { id: 'pasta-atun-tomate', name: 'Pasta integral con atún y tomate', slots: C, prepMin: 15, tags: ['Alta proteína', 'Rápida'],
+    ingredients: [['pasta-integral', 90], ['atun', 104], ['tomate-triturado', 150], ['cebolla', 30], ['aove', 8], ['especias', 1]],
+    steps: ['Cuece la pasta.', 'Haz una salsa rápida con cebolla y tomate, añade el atún y mezcla con la pasta.'] },
+  { id: 'pollo-curry-arroz', name: 'Pollo al curry suave con arroz integral', slots: C, prepMin: 30, tags: ['Alta proteína', 'Batch cooking'],
+    ingredients: [['pollo', 160], ['arroz-integral', 70], ['yogur', 80], ['cebolla', 50], ['pimiento', 60], ['especias', 3]],
+    steps: ['Cuece el arroz integral.', 'Dora el pollo con cebolla y pimiento, añade curry y el yogur al final sin que hierva.'] },
+  { id: 'merluza-cuscus', name: 'Merluza con cuscús y verduras', slots: CX, prepMin: 20, tags: ['Alta proteína', 'Ligera'],
+    ingredients: [['merluza', 200], ['cuscus', 50], ['calabacin', 120], ['zanahoria', 60], ['aove', 8]],
+    steps: ['Hidrata el cuscús.', 'Saltea las verduras y haz la merluza a la plancha.'] },
+  { id: 'gazpacho-huevo-atun', name: 'Gazpacho con huevo y atún', slots: CX, prepMin: 10, tags: ['Rápida', 'Ligera', 'Sin cocinar'],
+    ingredients: [['gazpacho', 400], ['huevo', 60], ['atun', 52], ['pan-integral', 30]],
+    steps: ['Sirve el gazpacho frío.', 'Acompaña con el huevo duro picado, el atún y picatostes de pan.'] },
+
+  // Ampliación: meriendas
+  { id: 'requeson-nueces', name: 'Requesón con nueces y miel', slots: M, prepMin: 2, tags: ['Alta proteína', 'Rápida', 'Sin cocinar', 'Vegetariana'],
+    ingredients: [['requeson', 150], ['nueces', 15], ['miel', 8]], steps: ['Mezcla y listo.'] },
+  { id: 'naranja-almendras', name: 'Naranja y almendras', slots: M, prepMin: 1, tags: ['Rápida', 'Sin cocinar', 'Vegetariana', 'Ligera'],
+    ingredients: [['naranja', 200], ['almendras', 20]], steps: ['Para llevar.'] },
+  { id: 'edamame-sal', name: 'Edamame con sal', slots: M, prepMin: 5, tags: ['Alta proteína', 'Vegetariana', 'Rápida'],
+    ingredients: [['edamame', 150], ['especias', 1]], steps: ['Cuece 4 min, escurre y añade sal en escamas.'] },
+  { id: 'tortitas-pavo', name: 'Tortitas de arroz con pavo y tomate', slots: M, prepMin: 3, tags: ['Alta proteína', 'Rápida'],
+    ingredients: [['tortitas-arroz', 25], ['jamon-pavo', 60], ['tomate', 60]], steps: ['Monta las tortitas con el pavo y el tomate en rodajas.'] },
+  { id: 'kiwi-yogur', name: 'Yogur con kiwi y chía', slots: DM, prepMin: 2, tags: ['Rápida', 'Sin cocinar', 'Vegetariana', 'Ligera'],
+    ingredients: [['yogur', 250], ['kiwi', 150], ['chia', 10]], steps: ['Corta el kiwi y mézclalo con el yogur y la chía.'] },
+
+  // Ampliación: cenas
+  { id: 'crema-calabaza', name: 'Crema de calabaza con huevo poché', slots: X, prepMin: 25, tags: ['Vegetariana', 'Ligera', 'Batch cooking'],
+    ingredients: [['calabaza', 300], ['cebolla', 50], ['patata', 80], ['huevo', 60], ['aove', 8], ['especias', 1]],
+    steps: ['Cuece calabaza, cebolla y patata 20 min.', 'Tritura con el aceite.', 'Sirve con un huevo poché por encima.'] },
+  { id: 'mejillones-ensalada', name: 'Ensalada de mejillones y patata', slots: X, prepMin: 15, tags: ['Alta proteína', 'Ligera'],
+    ingredients: [['mejillones', 140], ['patata', 150], ['lechuga', 80], ['tomate', 100], ['aove', 8]],
+    steps: ['Cuece la patata en dados 10 min.', 'Mezcla con la ensalada y los mejillones.'] },
+  { id: 'tortilla-calabacin', name: 'Tortilla de calabacín y cebolla', slots: X, prepMin: 15, tags: ['Vegetariana', 'Ligera'],
+    ingredients: [['huevo', 180], ['calabacin', 200], ['cebolla', 50], ['aove', 8]],
+    steps: ['Pocha el calabacín y la cebolla.', 'Añade los huevos batidos y cuaja la tortilla por ambos lados.'] },
+  { id: 'pavo-setas', name: 'Pechuga de pavo con setas y espinacas', slots: X, prepMin: 15, tags: ['Alta proteína', 'Ligera', 'Rápida'],
+    ingredients: [['pavo', 160], ['setas', 150], ['espinacas', 80], ['aove', 8], ['especias', 1]],
+    steps: ['Haz el pavo a la plancha.', 'Saltea las setas y las espinacas con ajo.'] },
+  { id: 'salmon-cuscus', name: 'Salmón con cuscús y judías verdes', slots: X, prepMin: 20, tags: ['Alta proteína'],
+    ingredients: [['salmon', 130], ['cuscus', 40], ['judias-verdes', 150], ['aove', 5]],
+    steps: ['Hidrata el cuscús.', 'Haz el salmón al horno 12 min y saltea las judías.'] },
+  { id: 'wok-tofu-edamame', name: 'Wok de tofu, edamame y verduras', slots: X, prepMin: 15, tags: ['Vegetariana', 'Rápida', 'Alta proteína'],
+    ingredients: [['tofu', 150], ['edamame', 80], ['verduras-wok', 200], ['aove', 8], ['especias', 1]],
+    steps: ['Dora el tofu en dados.', 'Añade edamame y verduras a fuego fuerte 6 min.'] },
 ]
 
+/** Recetas creadas por la casa (se cargan desde la API y se registran aquí). */
+const custom = new Map<string, Recipe>()
 const byId = new Map(RECIPES.map((r) => [r.id, r]))
+
+export function setCustomRecipes(list: Recipe[]) {
+  custom.clear()
+  for (const r of list) custom.set(r.id, r)
+}
+
+/** Recetario completo: el de serie más las recetas propias. */
+export function allRecipes(): Recipe[] {
+  return [...RECIPES, ...custom.values()]
+}
+
 export function recipeById(id: string): Recipe | undefined {
-  return byId.get(id)
+  return byId.get(id) ?? custom.get(id)
 }
 
 const EMOJI: [RegExp, string][] = [

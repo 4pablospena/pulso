@@ -2,18 +2,21 @@ import { exampleProfile } from '#shared/core/energy'
 import { DEFAULT_ROUTINES, DEFAULT_SCHEDULE, type Routine } from '#shared/core/plan'
 import { EXERCISE_DB, exerciseById } from '#shared/data/exercises'
 import type { Planner } from '#shared/core/planner'
-import type { FoodEntry, HealthDay, Settings, ShoppingItem, StrengthSession, WaterEntry, WeightEntry } from '#shared/types'
+import type { Recipe } from '#shared/data/recipes'
+import { DEFAULT_NOTIFICATIONS, type FoodEntry, type HealthDay, type Settings, type ShoppingItem, type StrengthSession, type WaterEntry, type WeightEntry } from '#shared/types'
 
 /** Almacén clave-valor (Upstash en producción, archivos en .data/db en local). */
 const store = () => useStorage('db')
 
 /** Datos de la casa, comunes a todas las personas. El resto es personal. */
-const SHARED = new Set(['shopping', 'shopping-meta'])
+const SHARED = new Set(['shopping', 'shopping-meta', 'custom-recipes', 'pantry'])
+const SHARED_PREFIXES = ['recipe-photo:']
 
 /** Cada persona guarda sus datos bajo `u:<id>:`; sin cuentas (en local) se usan las claves tal cual. */
 function scoped(key: string) {
   const user = currentUser()
-  return user && !SHARED.has(key) ? `u:${user.id}:${key}` : key
+  const shared = SHARED.has(key) || SHARED_PREFIXES.some((p) => key.startsWith(p))
+  return user && !shared ? `u:${user.id}:${key}` : key
 }
 
 async function read<T>(key: string, fallback: T): Promise<T> {
@@ -51,11 +54,22 @@ const defaultSettings: Settings = {
   nutritionPlanId: null,
   planOverrides: {},
   householdSize: 1,
+  onboarded: false,
+  notifications: DEFAULT_NOTIFICATIONS,
+  favorites: [],
 }
 
 export const db = {
   settings: {
-    get: async () => ({ ...defaultSettings, ...(await read<Partial<Settings>>('settings', {})) }),
+    get: async (): Promise<Settings> => {
+      const stored = await read<Partial<Settings> | null>('settings', null)
+      // Quien ya tenía ajustes guardados de antes de la bienvenida no tiene que repetirla.
+      return {
+        ...defaultSettings, ...stored,
+        notifications: { ...DEFAULT_NOTIFICATIONS, ...stored?.notifications },
+        onboarded: stored ? stored.onboarded ?? true : false,
+      }
+    },
     set: (s: Settings) => write('settings', s),
   },
   foods: {
@@ -101,6 +115,15 @@ export const db = {
       await write('weights', next)
       return next
     },
+  },
+  /** Despensa de la casa: gramos (o ml) disponibles por ingrediente. */
+  pantry: {
+    get: () => read<Record<string, number>>('pantry', {}),
+    save: (p: Record<string, number>) => write('pantry', p),
+  },
+  customRecipes: {
+    all: () => read<Recipe[]>('custom-recipes', []),
+    save: (list: Recipe[]) => write('custom-recipes', list),
   },
   kv: { read, write },
 }

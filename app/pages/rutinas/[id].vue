@@ -80,6 +80,10 @@ async function remove() {
         <label>{{ exerciseById(item.exerciseId)?.timed ? 'Seg. máx' : 'Reps máx' }} <input v-model.number="item.reps[1]" class="field" type="number" inputmode="numeric"></label>
         <label>Descanso (s) <input v-model.number="item.restSec" class="field" type="number" step="15" inputmode="numeric"></label>
       </div>
+      <label v-if="i < routine.items.length - 1" class="row between footnote">
+        <span>Superserie con el siguiente</span>
+        <input v-model="item.superset" type="checkbox" class="switch">
+      </label>
     </section>
 
     <button class="btn" style="--accent: var(--strength)" @click="picking = true"><AppIcon name="plus" /> Añadir ejercicios</button>

@@ -2,7 +2,7 @@ import { dailyTarget } from '#shared/core/energy'
 import { dayKey } from '#shared/core/format'
 import { recipeMacros } from '#shared/core/nutrition'
 import { focusFor } from '#shared/core/plan'
-import { dateRange, dayFactor, resolveDay, type PlannerTemplate, type ResolvedDay } from '#shared/core/planner'
+import { dateRange, dayFactor, resolveDay, type PlannerEntry, type PlannerTemplate, type ResolvedDay } from '#shared/core/planner'
 import { planById } from '#shared/data/plans'
 import type { PlannedDay, Settings } from '#shared/types'
 
@@ -43,4 +43,17 @@ export async function plannedDays(from: string, days: number): Promise<{ resolve
       },
     }
   }))
+}
+
+/** Convierte un día resuelto (plan + cambios) en una entrada fija del planificador. */
+export function entryFrom(day: ResolvedDay): PlannerEntry {
+  const meals: PlannerEntry['meals'] = {}
+  for (const m of day.meals) meals[m.slot] = { recipeId: m.recipe?.id ?? null, servings: m.servings }
+  return { meals, training: day.training }
+}
+
+/** Escribe varias fechas del planificador de una vez. */
+export async function writeEntries(entries: Record<string, PlannerEntry>) {
+  const planner = await db.planner.all()
+  await db.planner.save({ ...planner, ...entries })
 }

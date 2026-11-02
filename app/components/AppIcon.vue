@@ -12,7 +12,7 @@ withDefaults(defineProps<{ name: string; size?: number; filled?: boolean; weight
     </template>
     <template v-else-if="name === 'calendar'">
       <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" :fill="filled ? 'currentColor' : 'none'" />
-      <path d="M3.5 9.5h17" :stroke="filled ? '#000' : 'currentColor'" /><path d="M8 3v3.5M16 3v3.5" />
+      <path d="M3.5 9.5h17" :style="{ stroke: filled ? 'var(--bg)' : 'currentColor' }" /><path d="M8 3v3.5M16 3v3.5" />
     </template>
     <template v-else-if="name === 'dumbbell'">
       <rect x="4" y="7" width="3" height="10" rx="1.2" :fill="filled ? 'currentColor' : 'none'" />
@@ -30,6 +30,11 @@ withDefaults(defineProps<{ name: string; size?: number; filled?: boolean; weight
     <template v-else-if="name === 'cup'"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 2.5v3M12 2.5v3" /></template>
     <template v-else-if="name === 'moon'"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" :fill="filled ? 'currentColor' : 'none'" /></template>
     <template v-else-if="name === 'food'"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 1-3 4-3 7h3v11" /></template>
+    <template v-else-if="name === 'fish'"><path d="M3 12c3-5 9-6 13-3l4-3v12l-4-3c-4 3-10 2-13-3z" /><circle cx="8.5" cy="11" r="0.9" fill="currentColor" /></template>
+    <template v-else-if="name === 'egg'"><path d="M12 3c3.5 0 6.5 5.5 6.5 10a6.5 6.5 0 0 1-13 0C5.5 8.5 8.5 3 12 3z" /></template>
+    <template v-else-if="name === 'bowl'"><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-1.5 1-2.5 2-3M12 7c0-1.5 1-2.5 2-3M16 7c0-1 .5-2 1.5-2.5M8 20h8" /></template>
+    <template v-else-if="name === 'bean'"><path d="M8 4c4-2 9 1 9 6 0 3-2 4-2 7s-3 5-6 3-6-6-4-10c1-2 1-5 3-6z" /></template>
+    <template v-else-if="name === 'meat'"><path d="M15 3a6 6 0 0 1 5 9c-2 3-6 3-8 5l-3 3a2 2 0 1 1-3-3 2 2 0 1 1-3-3l3-3c2-2 2-6 5-8a6 6 0 0 1 4 0z" /></template>
     <template v-else-if="name === 'leaf'"><path d="M5 19c0-9 5-14 15-14 0 10-5 15-14 15M5 19l7-7" /></template>
     <template v-else-if="name === 'drop'"><path d="M12 2.7S5 10 5 14.5a7 7 0 0 0 14 0C19 10 12 2.7 12 2.7z" :fill="filled ? 'currentColor' : 'none'" /></template>
     <template v-else-if="name === 'flame'"><path d="M12 22a6.5 6.5 0 0 0 6.5-6.5c0-4.2-3.2-6.3-4.3-10.5-2.1 2.1-3.2 4.2-3.2 6.3-1-1-2.1-2.1-2.1-4.2-2.1 2.1-3.4 5.2-3.4 8.4A6.5 6.5 0 0 0 12 22z" :fill="filled ? 'currentColor' : 'none'" /></template>

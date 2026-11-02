@@ -82,3 +82,15 @@ describe('compra', () => {
 
   it('ritmo', () => expect(pace(10_000, 3120)).toBe('5:12 /km'))
 })
+
+describe('discos', async () => {
+  const { platesPerSide } = await import('./strength')
+  it('carga exacta', () => {
+    expect(platesPerSide(100, 20)).toEqual({ plates: [25, 15], rest: 0 })
+    expect(platesPerSide(62.5, 20)).toEqual({ plates: [20, 1.25], rest: 0 })
+  })
+  it('lo que no se puede cargar', () => {
+    expect(platesPerSide(21, 20)).toEqual({ plates: [], rest: 1 })
+    expect(platesPerSide(15, 20)).toEqual({ plates: [], rest: 0 })
+  })
+})

@@ -9,7 +9,8 @@ export default defineNuxtConfig({
       title: 'Pulso',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
-        { name: 'theme-color', content: '#000000' },
+        { name: 'theme-color', content: '#000000', media: '(prefers-color-scheme: dark)' },
+        { name: 'theme-color', content: '#f2f2f7', media: '(prefers-color-scheme: light)' },
         // Instalable en la pantalla de inicio del iPhone como app a pantalla completa.
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'mobile-web-app-capable', content: 'yes' },
@@ -31,6 +32,16 @@ export default defineNuxtConfig({
     healthIngestToken: '',
     /** Contraseña de acceso (NUXT_APP_PASSWORD). Obligatoria al desplegar. */
     appPassword: '',
+    /** Claves VAPID de las notificaciones push (NUXT_VAPID_PRIVATE_KEY). */
+    vapidPrivateKey: '',
+    /** QStash (Upstash) para avisos programados: fin de ayuno, comidas, agua y descanso. */
+    qstashToken: '',
+    qstashCurrentSigningKey: '',
+    qstashNextSigningKey: '',
+    qstashUrl: '',
+    public: {
+      vapidPublicKey: '',
+    },
   },
   nitro: {
     // Permite saber en cualquier parte del servidor quién hace la petición (datos por persona).

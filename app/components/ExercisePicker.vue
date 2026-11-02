@@ -45,5 +45,4 @@ const results = computed(() => filterExercises(search.value, muscle.value, equip
 <style scoped>
 .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
 .chip { flex: none; }
-.chip.on { background: var(--exercise); color: #000; }
 </style>

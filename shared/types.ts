@@ -21,6 +21,12 @@ export interface Settings {
   nutritionPlanId: string | null
   /** Día (YYYY-MM-DD) en que se activó el plan, para medir el cumplimiento desde entonces. */
   nutritionPlanSince?: string | null
+  /** Recetas marcadas como favoritas. */
+  favorites: string[]
+  /** Qué avisos quiere recibir esta persona. */
+  notifications: NotificationPrefs
+  /** Ya pasó por la bienvenida (perfil, objetivo, plan y semana). */
+  onboarded: boolean
   /** Personas que comen en casa: multiplica la lista de la compra. */
   householdSize: number
   /** Cambios del usuario sobre el plan: clave "díaSemana:comida" → id de receta. */
@@ -85,6 +91,8 @@ export interface SessionExercise {
   restSec: number
   reps: [number, number]
   timed?: boolean
+  /** En superserie con el siguiente ejercicio. */
+  superset?: boolean
   sets: SetEntry[]
 }
 
@@ -119,6 +127,8 @@ export interface ShoppingItem {
   neededGrams?: number
   recipes?: string[]
   pantry?: boolean
+  /** Lo que ya hay en la despensa de este ingrediente (se ha restado de lo que compras). */
+  inPantryGrams?: number
 }
 
 export interface DaySummary {
@@ -191,4 +201,16 @@ export interface AuthStatus {
   /** Aún no hay usuarios: el primer acceso usa NUXT_APP_PASSWORD y crea la cuenta de administrador. */
   setup: boolean
   user: AppUser | null
+  /** Falta la bienvenida de esta cuenta. */
+  needsOnboarding: boolean
 }
+
+export interface NotificationPrefs {
+  shopping: boolean
+  fasting: boolean
+  meals: boolean
+  water: boolean
+  rest: boolean
+}
+
+export const DEFAULT_NOTIFICATIONS: NotificationPrefs = { shopping: true, fasting: true, meals: false, water: false, rest: true }

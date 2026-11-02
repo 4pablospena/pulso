@@ -44,7 +44,7 @@ useHead({ title: () => `${props.title} · Pulso` })
   transition: background 0.2s, border-color 0.2s;
 }
 .bar.compact {
-  background: rgba(22, 22, 24, 0.82); border-bottom-color: var(--line);
+  background: var(--bar-bg); border-bottom-color: var(--line);
   backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 .bar-title { font-size: 17px; font-weight: 600; opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }

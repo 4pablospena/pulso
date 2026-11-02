@@ -82,8 +82,12 @@ async function generate() {
   }
 }
 
+// Los cambios funcionan sin cobertura: se aplican al momento y se envían en cuanto vuelva la red.
+const { send } = useOffline()
 async function patch(item: ShoppingItem, body: Partial<ShoppingItem>) {
-  items.value = await $fetch(`/api/shopping/${item.id}`, { method: 'PATCH', body })
+  items.value = items.value.map((i) => (i.id === item.id ? { ...i, ...body } : i))
+  const fresh = await send<ShoppingItem[]>({ method: 'PATCH', url: `/api/shopping/${item.id}`, body })
+  if (fresh) items.value = fresh
 }
 const toggle = (item: ShoppingItem) => patch(item, { checked: !item.checked })
 const setHave = (item: ShoppingItem, have: boolean) => patch(item, { have })
@@ -95,8 +99,17 @@ async function add() {
   draft.value = ''
 }
 
+async function toPantry() {
+  const { added } = await $fetch<{ added: number }>('/api/pantry/from-cart', { method: 'POST' })
+  await remove('checked')
+  await refreshNuxtData('pantry')
+  show(added ? `${added} productos guardados en la despensa` : 'Carro vaciado')
+}
+
 async function remove(id: string) {
-  items.value = await $fetch(`/api/shopping/${id}`, { method: 'DELETE' })
+  items.value = items.value.filter((i) => (id === 'checked' ? !i.checked : i.id !== id))
+  const fresh = await send<ShoppingItem[]>({ method: 'DELETE', url: `/api/shopping/${id}` })
+  if (fresh) items.value = fresh
 }
 
 /** Varias personas tienen productos de su plan: se indica de quién es cada uno. */
@@ -119,6 +132,7 @@ async function share() {
 <template>
   <main class="page">
     <PageHeader title="Compra" :eyebrow="rangeLabel ?? undefined">
+      <NuxtLink to="/despensa" class="icon-btn" aria-label="Despensa"><AppIcon name="house" :size="17" :weight="2.2" /></NuxtLink>
       <button class="icon-btn" aria-label="Compartir lista" :disabled="!toBuy.length" @click="share"><AppIcon name="share" :size="17" :weight="2.2" /></button>
       <button class="chip" style="color: var(--run)" :disabled="!toBuy.length" @click="ordering = true">Mercadona</button>
     </PageHeader>
@@ -179,7 +193,7 @@ async function share() {
               <button class="check" :aria-label="`Al carro: ${item.product ?? item.name}`" @click="toggle(item)" />
               <button class="stack grow" style="text-align: left" @click="expanded = expanded === item.id ? null : item.id">
                 <span>{{ item.product ?? item.name }}</span>
-                <span v-if="item.source === 'plan'" class="footnote muted">{{ item.format }} · necesitas {{ need(item) }}<template v-if="severalOwners && item.ownerName"> · {{ item.ownerName }}</template></span>
+                <span v-if="item.source === 'plan'" class="footnote muted">{{ item.format }} · necesitas {{ need(item) }}<template v-if="item.inPantryGrams"> (tienes {{ amountLabel(ingredientById(item.ingredientId ?? ''), item.inPantryGrams) }})</template><template v-if="severalOwners && item.ownerName"> · {{ item.ownerName }}</template></span>
                 <span v-else-if="severalOwners && item.ownerName" class="footnote muted">Añadido por {{ item.ownerName }}</span>
               </button>
               <div v-if="item.units" class="stepper small">
@@ -240,6 +254,7 @@ async function share() {
           </div>
         </div>
       </div>
+      <button class="btn ghost" style="margin-top: 8px" @click="toPantry">Guardar en la despensa y vaciar el carro</button>
     </section>
 
     <div v-if="ordering" class="sheet-backdrop" @click.self="ordering = false">
