@@ -1,0 +1,54 @@
+# Genera Pulso.xcodeproj con:  brew install xcodegen && xcodegen
+name: Pulso
+options:
+  bundleIdPrefix: com.pablospena
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: es
+configs:
+  Debug: debug
+  Release: release
+configFiles:
+  Debug: Config/App.xcconfig
+  Release: Config/App.xcconfig
+packages:
+  PulsoCore:
+    path: Packages/PulsoCore
+targets:
+  Pulso:
+    type: application
+    platform: iOS
+    sources:
+      - path: Pulso
+    dependencies:
+      - package: PulsoCore
+      - sdk: HealthKit.framework
+    entitlements:
+      path: Pulso/Resources/Pulso.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+        com.apple.developer.healthkit.background-delivery: true
+    info:
+      path: Pulso/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Pulso
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIUserInterfaceStyle: Dark
+        NSHealthShareUsageDescription: Pulso lee tus entrenos, energía activa, pasos, frecuencia cardiaca y anillos de Actividad para ajustar tus calorías y macros del día.
+        NSHealthUpdateUsageDescription: Pulso guarda tus comidas, agua y sesiones de fuerza en Salud para que aparezcan en Fitness y en Strava.
+        NSCameraUsageDescription: La cámara se usa para fotografiar platos y escanear códigos de barras.
+        NSPhotoLibraryUsageDescription: Elige una foto de tu comida para estimar sus macros.
+        LSApplicationQueriesSchemes: [strava]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.pablospena.pulso.oauth
+            CFBundleURLSchemes: [pulso]
+        STRAVA_CLIENT_ID: $(STRAVA_CLIENT_ID)
+        STRAVA_CLIENT_SECRET: $(STRAVA_CLIENT_SECRET)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.pablospena.pulso
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        DEVELOPMENT_TEAM: ""

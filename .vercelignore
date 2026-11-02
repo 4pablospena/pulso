@@ -1,0 +1,10 @@
+# Nada de datos ni claves locales en Vercel
+.env
+.env.*
+!.env.example
+.data
+_archive
+.nuxt
+.output
+.claude
+node_modules

@@ -1,0 +1,14 @@
+# Dependencias y builds
+node_modules/
+.nuxt/
+.output/
+.vercel/
+_archive/ios-swift/**/.build/
+
+# Datos locales y claves: nunca al repositorio
+.data/
+.env
+.env.*
+!.env.example
+
+.DS_Store
